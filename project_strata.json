@@ -1,0 +1,57 @@
+{
+  "state": {
+    "name": "",
+    "banner": null,
+    "stages": [
+      {
+        "id": "v1",
+        "title": "Reference",
+        "desc": "",
+        "status": "Not Started"
+      },
+      {
+        "id": "v2",
+        "title": "Sculpt",
+        "desc": "",
+        "status": "Not Started"
+      },
+      {
+        "id": "v3",
+        "title": "Polish",
+        "desc": "",
+        "status": "Not Started"
+      }
+    ],
+    "theme": "light",
+    "lastUpdated": 1767648030851,
+    "initialized": true
+  },
+  "axioms": [
+    {
+      "id": 1767648030851,
+      "name": "Project Start",
+      "timestamp": "21:20:30",
+      "state": "{\"name\":\"\",\"banner\":null,\"stages\":[{\"id\":\"v1\",\"title\":\"Reference\",\"desc\":\"\",\"status\":\"Not Started\"},{\"id\":\"v2\",\"title\":\"Sculpt\",\"desc\":\"\",\"status\":\"Not Started\"},{\"id\":\"v3\",\"title\":\"Polish\",\"desc\":\"\",\"status\":\"Not Started\"}],\"theme\":\"light\",\"lastUpdated\":1767648030851,\"initialized\":true}",
+      "delta": "{\"name\":\"\",\"theme\":\"light\",\"banner\":null,\"stages\":[{\"id\":\"v1\",\"title\":\"Reference\",\"desc\":\"\",\"status\":\"Not Started\"},{\"id\":\"v2\",\"title\":\"Sculpt\",\"desc\":\"\",\"status\":\"Not Started\"},{\"id\":\"v3\",\"title\":\"Polish\",\"desc\":\"\",\"status\":\"Not Started\"}]}",
+      "stratumId": 0,
+      "active": true
+    }
+  ],
+  "projectStrata": [
+    {
+      "id": 0,
+      "name": "Core Draft",
+      "color": "#6366f1"
+    },
+    {
+      "id": 1,
+      "name": "Refining",
+      "color": "#ec4899"
+    },
+    {
+      "id": 2,
+      "name": "Polishing",
+      "color": "#f59e0b"
+    }
+  ]
+}
