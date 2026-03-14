@@ -1067,6 +1067,304 @@ body::before {
   .tab-bar { padding: 0 20px; }
   .file-detail-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   ONBOARDING TOUR
+   ============================================================ */
+.onboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  pointer-events: none;
+}
+.onboard-overlay.active { pointer-events: all; }
+
+/* Dark vignette around highlighted element */
+.onboard-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 801;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.onboard-backdrop.visible { opacity: 1; }
+
+/* Cut-out highlight ring */
+.onboard-highlight {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.72), 0 0 0 3px var(--amber), 0 0 32px rgba(240,161,74,0.5);
+  z-index: 802;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* Tour tooltip bubble */
+.onboard-bubble {
+  position: fixed;
+  z-index: 803;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius-xl);
+  padding: 28px 28px 22px;
+  width: 340px;
+  box-shadow: var(--shadow-float), 0 0 0 1px rgba(240,161,74,0.1);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateY(8px);
+}
+.onboard-bubble.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.onboard-step-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+}
+.onboard-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-hi);
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.onboard-body {
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+.onboard-body strong { color: var(--text-hi); }
+.onboard-body .hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-mid);
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-hi);
+  margin: 4px 2px;
+}
+
+.onboard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.onboard-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.onboard-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border-mid);
+  transition: all 0.2s;
+}
+.onboard-dot.active {
+  background: var(--amber);
+  width: 18px;
+  border-radius: 3px;
+}
+.onboard-buttons { display: flex; gap: 8px; }
+.onboard-skip {
+  font-size: 12px;
+  color: var(--text-ghost);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  padding: 4px;
+  transition: color 0.15s;
+}
+.onboard-skip:hover { color: var(--text-dim); }
+
+/* Arrow pointer on bubble */
+.onboard-bubble::before {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hi);
+  transform: rotate(45deg);
+  transition: all 0.35s;
+}
+.onboard-bubble.arrow-top::before { top: -7px; left: 28px; border-bottom: none; border-right: none; }
+.onboard-bubble.arrow-bottom::before { bottom: -7px; left: 28px; border-top: none; border-left: none; }
+.onboard-bubble.arrow-left::before { left: -7px; top: 28px; border-right: none; border-top: none; }
+.onboard-bubble.arrow-right::before { right: -7px; top: 28px; border-left: none; border-bottom: none; }
+.onboard-bubble.arrow-none::before { display: none; }
+
+/* ============================================================
+   WELCOME MODAL (full intro screen)
+   ============================================================ */
+#welcome-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.welcome-modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-xl);
+  max-width: 640px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: var(--shadow-float);
+}
+.wm-hero {
+  background: linear-gradient(135deg, #0f1118 0%, #1a1624 50%, #111820 100%);
+  padding: 48px 48px 36px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.wm-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 60%, rgba(240,161,74,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 75% 30%, rgba(74,200,212,0.08) 0%, transparent 70%);
+}
+.wm-strata-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+.wm-layer {
+  height: 10px;
+  border-radius: 5px;
+  animation: layerPulse 3s ease-in-out infinite;
+}
+.wm-layer:nth-child(1) { width: 180px; background: linear-gradient(90deg, #f0a14a, #f5c07a); animation-delay: 0s; }
+.wm-layer:nth-child(2) { width: 140px; background: linear-gradient(90deg, #4ac8d4, #7adde6); animation-delay: 0.2s; }
+.wm-layer:nth-child(3) { width: 105px; background: linear-gradient(90deg, #9b8eed, #b8aef5); animation-delay: 0.4s; }
+.wm-layer:nth-child(4) { width: 74px;  background: linear-gradient(90deg, #7ecba1, #a0deba); animation-delay: 0.6s; }
+@keyframes layerPulse {
+  0%, 100% { opacity: 0.85; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.04); }
+}
+
+.wm-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--text-hi);
+  position: relative; z-index: 1;
+  margin-bottom: 10px;
+}
+.wm-title em { color: var(--amber); font-style: normal; }
+.wm-sub {
+  font-size: 15px;
+  color: var(--text-mid);
+  line-height: 1.6;
+  position: relative; z-index: 1;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.wm-body { padding: 32px 40px 36px; }
+
+.wm-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.wm-feature {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.wm-feature-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.wm-feature-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-bottom: 3px;
+}
+.wm-feature-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.wm-ctas {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.wm-footer-note {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-ghost);
+  margin-top: 16px;
+}
+
+/* ============================================================
+   HELP BUTTON (persistent)
+   ============================================================ */
+#help-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--bg-float);
+  border: 1px solid var(--border-mid);
+  color: var(--text-mid);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-card);
+  z-index: 200;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+#help-btn:hover {
+  background: var(--amber);
+  color: #1a0e00;
+  border-color: var(--amber);
+  box-shadow: var(--shadow-amber);
+  transform: scale(1.08);
+}
 </style>
 </head>
 <body>
@@ -1387,6 +1685,92 @@ body::before {
     </div>
   </div>
 </div>
+
+<!-- ============================================================
+     WELCOME / INTRO MODAL
+     ============================================================ -->
+<div id="welcome-modal" style="display:none">
+  <div class="welcome-modal-card">
+    <div class="wm-hero">
+      <div class="wm-strata-visual">
+        <div class="wm-layer"></div>
+        <div class="wm-layer"></div>
+        <div class="wm-layer"></div>
+        <div class="wm-layer"></div>
+      </div>
+      <div class="wm-title">Welcome to Str<em>a</em>tum</div>
+      <div class="wm-sub">Your creative project planner — designed for artists, not accountants.</div>
+    </div>
+    <div class="wm-body">
+      <div class="wm-features">
+        <div class="wm-feature">
+          <div class="wm-feature-icon">🗺</div>
+          <div>
+            <div class="wm-feature-title">Plan in stages</div>
+            <div class="wm-feature-desc">Break projects into layers — Concept, Sculpt, Texture, Polish. As flexible as you need.</div>
+          </div>
+        </div>
+        <div class="wm-feature">
+          <div class="wm-feature-icon">📁</div>
+          <div>
+            <div class="wm-feature-title">Store your files</div>
+            <div class="wm-feature-desc">Upload images, PSD, .blend, .fbx, .obj — any file. Stored online, accessible anywhere.</div>
+          </div>
+        </div>
+        <div class="wm-feature">
+          <div class="wm-feature-icon">🔁</div>
+          <div>
+            <div class="wm-feature-title">Version history</div>
+            <div class="wm-feature-desc">Every upload is saved. Roll back to any earlier version of a file in one click.</div>
+          </div>
+        </div>
+        <div class="wm-feature">
+          <div class="wm-feature-icon">☁</div>
+          <div>
+            <div class="wm-feature-title">One file to keep</div>
+            <div class="wm-feature-desc">Export your whole project as a single JSON file. Import it on any device, any time.</div>
+          </div>
+        </div>
+      </div>
+      <div class="wm-ctas">
+        <button class="btn btn-amber" style="padding:12px 28px;font-size:15px" onclick="startTour()">
+          ✦ Show me around
+        </button>
+        <button class="btn btn-teal" style="padding:12px 20px;font-size:15px" onclick="loadDemoProject()">
+          🎨 Try the demo project
+        </button>
+        <button class="btn btn-ghost" style="padding:12px 20px;font-size:15px" onclick="dismissWelcomeModal()">
+          I know what I'm doing →
+        </button>
+      </div>
+      <div class="wm-footer-note">No account needed · Works in your browser · Set up cloud storage whenever you're ready</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     GUIDED TOUR OVERLAY
+     ============================================================ -->
+<div class="onboard-overlay" id="onboard-overlay" style="display:none">
+  <div class="onboard-backdrop" id="onboard-backdrop"></div>
+  <div class="onboard-highlight" id="onboard-highlight"></div>
+  <div class="onboard-bubble" id="onboard-bubble">
+    <div class="onboard-step-label" id="onboard-step-label">Step 1 of 7</div>
+    <div class="onboard-title" id="onboard-title"></div>
+    <div class="onboard-body" id="onboard-body"></div>
+    <div class="onboard-footer">
+      <div class="onboard-dots" id="onboard-dots"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="onboard-skip" onclick="endTour()">Skip tour</button>
+        <button class="btn btn-ghost btn-sm" id="onboard-prev" onclick="tourPrev()">← Back</button>
+        <button class="btn btn-amber btn-sm" id="onboard-next" onclick="tourNext()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Persistent help button -->
+<button id="help-btn" onclick="showHelpMenu()" title="Help & Tour">?</button>
 
 <!-- Upload progress toast -->
 <div class="upload-progress" id="upload-progress">
@@ -2451,9 +2835,375 @@ document.addEventListener('keydown', e => {
 });
 
 /* ============================================================
+   ONBOARDING — WELCOME MODAL
+   ============================================================ */
+function showWelcomeModal() {
+  document.getElementById('welcome-modal').style.display = 'flex';
+}
+function dismissWelcomeModal() {
+  document.getElementById('welcome-modal').style.display = 'none';
+  localStorage.setItem('stratum_onboarded', '1');
+}
+
+/* ============================================================
+   DEMO PROJECT
+   ============================================================ */
+function loadDemoProject() {
+  dismissWelcomeModal();
+  // Check if demo already exists
+  const existing = state.projects.find(p => p.id === 'demo-dragon-2025');
+  if (existing) { openProject('demo-dragon-2025'); return; }
+
+  const demo = {
+    id: 'demo-dragon-2025',
+    name: 'Dragon Character — 2025',
+    desc: 'A full-character art piece for a fantasy RPG. Covers concept through final render.',
+    color: '#f0a14a',
+    notes: 'Client brief: needs to feel ancient but sleek. Think obsidian scales, glowing amber eyes.\n\nRef images collected in the Files tab.\n\nDeadline: end of month.',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    strata: [
+      {
+        id: 's1', name: 'Concept & Reference', color: '#f0a14a', collapsed: false,
+        desc: 'Gather inspiration, sketch thumbnails, lock in the design direction.',
+        axioms: [
+          { id: 'a1', name: 'Collect reference images (Pinterest, ArtStation)', done: true, tag: '' },
+          { id: 'a2', name: 'Rough thumbnail sketches (x10)', done: true, tag: '' },
+          { id: 'a3', name: 'Colour palette exploration', done: true, tag: '' },
+          { id: 'a4', name: 'Get client sign-off on direction', done: false, tag: '' }
+        ]
+      },
+      {
+        id: 's2', name: 'Blockout & Sculpt', color: '#4ac8d4', collapsed: false,
+        desc: 'Base mesh, primary forms, major anatomy. ZBrush for detail passes.',
+        axioms: [
+          { id: 'a5', name: 'Base mesh in Blender', done: true, tag: '' },
+          { id: 'a6', name: 'Primary sculpt pass (ZBrush)', done: true, tag: '' },
+          { id: 'a7', name: 'Secondary detail pass (scales, horns)', done: false, tag: '' },
+          { id: 'a8', name: 'Micro-detail (skin pores, cracks)', done: false, tag: '' },
+          { id: 'a9', name: 'Export decimated mesh for retopology', done: false, tag: '' }
+        ]
+      },
+      {
+        id: 's3', name: 'Retopology & UVs', color: '#9b8eed', collapsed: true,
+        desc: 'Clean topology for animation-ready mesh. UV unwrap for texturing.',
+        axioms: [
+          { id: 'a10', name: 'Retopology in Blender', done: false, tag: '' },
+          { id: 'a11', name: 'UV unwrap (body, head, accessories)', done: false, tag: '' },
+          { id: 'a12', name: 'Bake normals from high-res', done: false, tag: '' }
+        ]
+      },
+      {
+        id: 's4', name: 'Texturing', color: '#7ecba1', collapsed: true,
+        desc: 'Substance Painter for PBR textures. Albedo, roughness, metallic, emission.',
+        axioms: [
+          { id: 'a13', name: 'Base colour (albedo) pass', done: false, tag: '' },
+          { id: 'a14', name: 'Roughness / metallic maps', done: false, tag: '' },
+          { id: 'a15', name: 'Emission — eye glow & runes', done: false, tag: '' },
+          { id: 'a16', name: 'Export texture sets (4K)', done: false, tag: '' }
+        ]
+      },
+      {
+        id: 's5', name: 'Lighting & Final Render', color: '#e06b6b', collapsed: true,
+        desc: 'Scene setup, lighting rig, final beauty renders for portfolio.',
+        axioms: [
+          { id: 'a17', name: 'Scene setup in Blender Cycles', done: false, tag: '' },
+          { id: 'a18', name: 'Lighting — 3-point + rim', done: false, tag: '' },
+          { id: 'a19', name: 'Beauty render (4K, 1000 samples)', done: false, tag: '' },
+          { id: 'a20', name: 'Post-process in Photoshop', done: false, tag: '' },
+          { id: 'a21', name: 'Portfolio-ready export', done: false, tag: '' }
+        ]
+      }
+    ],
+    files: [
+      {
+        id: 'df1', name: 'dragon_concept_v3.jpg', type: 'image', size: 2400000, stratumId: 's1',
+        notes: 'Approved concept direction. Client liked the swept-back horn design.',
+        addedAt: new Date(Date.now() - 86400000*5).toISOString(),
+        versions: [
+          { id: 'dv1a', url: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=600', note: 'Initial sketch', uploadedAt: new Date(Date.now() - 86400000*7).toISOString(), size: 1200000, current: false },
+          { id: 'dv1b', url: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=800', note: 'Colour added', uploadedAt: new Date(Date.now() - 86400000*6).toISOString(), size: 1800000, current: false },
+          { id: 'dv1c', url: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=1000', note: 'Final approved', uploadedAt: new Date(Date.now() - 86400000*5).toISOString(), size: 2400000, current: true }
+        ]
+      },
+      {
+        id: 'df2', name: 'blockout_v1.blend', type: '3d', size: 18700000, stratumId: 's2',
+        notes: 'Base mesh blockout. ~12k polys. Needs retopo.',
+        addedAt: new Date(Date.now() - 86400000*3).toISOString(),
+        versions: [
+          { id: 'dv2a', url: '#', note: 'First blockout', uploadedAt: new Date(Date.now() - 86400000*3).toISOString(), size: 18700000, current: true }
+        ]
+      },
+      {
+        id: 'df3', name: 'ref_board.jpg', type: 'image', size: 5100000, stratumId: 's1',
+        notes: 'Reference board — scales, anatomy, colour palette.',
+        addedAt: new Date(Date.now() - 86400000*8).toISOString(),
+        versions: [
+          { id: 'dv3a', url: 'https://images.unsplash.com/photo-1559181567-c3190ca9d68d?w=800', note: 'Initial board', uploadedAt: new Date(Date.now() - 86400000*8).toISOString(), size: 5100000, current: true }
+        ]
+      }
+    ]
+  };
+
+  state.projects.unshift(demo);
+  saveToStorage();
+  renderProjectList();
+  openProject('demo-dragon-2025');
+  toast('Demo project loaded! Explore freely 🐉', 'success');
+  setTimeout(() => startTour(), 600);
+}
+
+/* ============================================================
+   GUIDED TOUR
+   ============================================================ */
+const TOUR_STEPS = [
+  {
+    title: 'This is your sidebar',
+    body: `All your <strong>projects</strong> live here. Click any project to open it, or hit <span class="hint">＋ New Project</span> to start fresh. Stratum saves everything automatically as you work.`,
+    target: '#sidebar',
+    arrow: 'arrow-left',
+    position: 'right'
+  },
+  {
+    title: 'Your project at a glance',
+    body: `The coloured bar shows your <strong>overall progress</strong> across all stages. The stats below tell you how many tasks are done and how many files you've attached. It updates in real time.`,
+    target: '#project-header',
+    arrow: 'arrow-top',
+    position: 'below'
+  },
+  {
+    title: 'Plan tab — your creative pipeline',
+    body: `This is where you plan. Each <strong>Stratum</strong> (coloured block) is a stage of your project — like Concept, Sculpt, Texture, or Render. Add as many as you like, in any order that makes sense to you.`,
+    target: '#tab-plan',
+    arrow: 'arrow-top',
+    position: 'below',
+    action: () => document.querySelector('.tab-btn')?.click()
+  },
+  {
+    title: 'Tasks inside each stage',
+    body: `Inside each stage, you can add <strong>tasks</strong> — small steps to tick off as you go. Click the circle to mark one done. Click the stage name to collapse it when you're finished with it.`,
+    target: '.stratum-card',
+    arrow: 'arrow-top',
+    position: 'below'
+  },
+  {
+    title: 'Files tab — your digital library',
+    body: `Switch to <strong>Files</strong> to upload and manage your work. Drag and drop anything here — concept art, .blend files, .psd, .fbx, reference images. Each file keeps its own version history.`,
+    target: '.tab-bar',
+    arrow: 'arrow-bottom',
+    position: 'above',
+    action: () => {
+      const btns = document.querySelectorAll('.tab-btn');
+      if (btns[1]) btns[1].click();
+    }
+  },
+  {
+    title: 'Export — your one local file',
+    body: `Hit <span class="hint">⬇ Export</span> at any time to download your whole project as a single <code>.json</code> file. This is your backup. Import it on any device to pick up exactly where you left off.`,
+    target: '#topbar .topbar-actions',
+    arrow: 'arrow-top',
+    position: 'below'
+  },
+  {
+    title: 'You\'re ready to go! 🎉',
+    body: `That's the tour. A few tips: <br><br>
+      • <strong>Settings tab</strong> → set up Cloudinary for real file hosting (free, 25GB)<br>
+      • <strong>☁ Cloud Sync</strong> → back up your project plan to GitHub<br>
+      • Click <strong>?</strong> anytime to replay this tour<br><br>
+      Now go make something great.`,
+    target: null,
+    arrow: 'arrow-none',
+    position: 'center'
+  }
+];
+
+let tourStep = 0;
+let tourActive = false;
+
+function startTour() {
+  dismissWelcomeModal();
+  // Make sure demo or some project is open
+  if (!state.activeProjectId && state.projects.length) {
+    openProject(state.projects[0].id);
+  } else if (!state.activeProjectId) {
+    loadDemoProject();
+    return; // loadDemoProject calls startTour after delay
+  }
+
+  tourStep = 0;
+  tourActive = true;
+  document.getElementById('onboard-overlay').style.display = 'block';
+  document.getElementById('onboard-backdrop').classList.add('visible');
+  renderTourStep();
+}
+
+function endTour() {
+  tourActive = false;
+  document.getElementById('onboard-overlay').style.display = 'none';
+  document.getElementById('onboard-backdrop').classList.remove('visible');
+  document.getElementById('onboard-highlight').style.display = 'none';
+  document.getElementById('onboard-bubble').classList.remove('visible');
+  localStorage.setItem('stratum_onboarded', '1');
+  toast('Tour complete! Click ? anytime to replay.', 'info');
+}
+
+function tourNext() {
+  if (tourStep >= TOUR_STEPS.length - 1) { endTour(); return; }
+  tourStep++;
+  renderTourStep();
+}
+function tourPrev() {
+  if (tourStep <= 0) return;
+  tourStep--;
+  renderTourStep();
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourStep];
+  if (!step) { endTour(); return; }
+
+  // Run any action (e.g. switch tab)
+  if (step.action) step.action();
+
+  // Update text
+  document.getElementById('onboard-step-label').textContent = `Step ${tourStep + 1} of ${TOUR_STEPS.length}`;
+  document.getElementById('onboard-title').textContent = step.title;
+  document.getElementById('onboard-body').innerHTML = step.body;
+
+  // Dots
+  const dots = document.getElementById('onboard-dots');
+  dots.innerHTML = TOUR_STEPS.map((_, i) =>
+    `<div class="onboard-dot ${i === tourStep ? 'active' : ''}"></div>`
+  ).join('');
+
+  // Prev/Next buttons
+  document.getElementById('onboard-prev').style.display = tourStep > 0 ? 'inline-flex' : 'none';
+  document.getElementById('onboard-next').textContent = tourStep === TOUR_STEPS.length - 1 ? 'Finish ✓' : 'Next →';
+
+  // Position highlight + bubble
+  const bubble = document.getElementById('onboard-bubble');
+  const highlight = document.getElementById('onboard-highlight');
+
+  bubble.className = `onboard-bubble ${step.arrow}`;
+
+  if (!step.target) {
+    // Centered
+    highlight.style.display = 'none';
+    bubble.style.top = '50%';
+    bubble.style.left = '50%';
+    bubble.style.transform = 'translate(-50%, -50%)';
+    setTimeout(() => bubble.classList.add('visible'), 20);
+    return;
+  }
+
+  const targetEl = document.querySelector(step.target);
+  if (!targetEl) {
+    highlight.style.display = 'none';
+    bubble.style.top = '50%';
+    bubble.style.left = '50%';
+    bubble.style.transform = 'translate(-50%, -50%)';
+    setTimeout(() => bubble.classList.add('visible'), 20);
+    return;
+  }
+
+  const rect = targetEl.getBoundingClientRect();
+  const pad = 8;
+
+  // Position highlight
+  highlight.style.display = 'block';
+  highlight.style.left = (rect.left - pad) + 'px';
+  highlight.style.top = (rect.top - pad) + 'px';
+  highlight.style.width = (rect.width + pad * 2) + 'px';
+  highlight.style.height = (rect.height + pad * 2) + 'px';
+
+  // Position bubble
+  bubble.style.transform = '';
+  const bw = 340, bh = 260;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const gap = 20;
+
+  if (step.position === 'right') {
+    bubble.style.left = Math.min(rect.right + gap, vw - bw - 16) + 'px';
+    bubble.style.top = Math.max(rect.top, 16) + 'px';
+  } else if (step.position === 'below') {
+    bubble.style.left = Math.max(16, Math.min(rect.left, vw - bw - 16)) + 'px';
+    bubble.style.top = Math.min(rect.bottom + gap, vh - bh - 16) + 'px';
+  } else if (step.position === 'above') {
+    bubble.style.left = Math.max(16, Math.min(rect.left, vw - bw - 16)) + 'px';
+    bubble.style.top = Math.max(rect.top - bh - gap, 16) + 'px';
+  } else {
+    bubble.style.left = '50%';
+    bubble.style.top = '50%';
+    bubble.style.transform = 'translate(-50%, -50%)';
+  }
+
+  setTimeout(() => bubble.classList.add('visible'), 20);
+
+  // Scroll target into view
+  targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ============================================================
+   HELP MENU
+   ============================================================ */
+function showHelpMenu() {
+  // Simple: show a small toast menu or just restart tour
+  const existing = document.getElementById('help-menu-popup');
+  if (existing) { existing.remove(); return; }
+
+  const menu = document.createElement('div');
+  menu.id = 'help-menu-popup';
+  menu.style.cssText = `
+    position: fixed; bottom: 76px; right: 24px;
+    background: var(--bg-float); border: 1px solid var(--border-hi);
+    border-radius: 12px; padding: 8px; z-index: 300;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column; gap: 4px; min-width: 200px;
+  `;
+  menu.innerHTML = `
+    <button onclick="startTour();document.getElementById('help-menu-popup').remove()"
+      style="background:none;border:none;cursor:pointer;color:var(--text-hi);font-family:var(--font-body);font-size:13px;padding:10px 14px;text-align:left;border-radius:8px;display:flex;gap:10px;align-items:center;transition:background 0.12s"
+      onmouseover="this.style.background='var(--bg-raised)'" onmouseout="this.style.background='none'">
+      ✦ Guided tour
+    </button>
+    <button onclick="showWelcomeModal();document.getElementById('help-menu-popup').remove()"
+      style="background:none;border:none;cursor:pointer;color:var(--text-hi);font-family:var(--font-body);font-size:13px;padding:10px 14px;text-align:left;border-radius:8px;display:flex;gap:10px;align-items:center;transition:background 0.12s"
+      onmouseover="this.style.background='var(--bg-raised)'" onmouseout="this.style.background='none'">
+      👋 Welcome screen
+    </button>
+    <button onclick="loadDemoProject();document.getElementById('help-menu-popup').remove()"
+      style="background:none;border:none;cursor:pointer;color:var(--text-hi);font-family:var(--font-body);font-size:13px;padding:10px 14px;text-align:left;border-radius:8px;display:flex;gap:10px;align-items:center;transition:background 0.12s"
+      onmouseover="this.style.background='var(--bg-raised)'" onmouseout="this.style.background='none'">
+      🐉 Load demo project
+    </button>
+    <div style="height:1px;background:var(--border-dim);margin:4px 0"></div>
+    <div style="font-size:11px;color:var(--text-ghost);padding:6px 14px;font-family:var(--font-mono)">Stratum v1.0</div>
+  `;
+  document.body.appendChild(menu);
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function closeMenu(e) {
+      if (!menu.contains(e.target) && e.target.id !== 'help-btn') {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    });
+  }, 100);
+}
+
+/* ============================================================
    START
    ============================================================ */
 init();
+
+// Show welcome modal for first-time visitors
+window.addEventListener('load', () => {
+  const onboarded = localStorage.getItem('stratum_onboarded');
+  if (!onboarded) {
+    setTimeout(() => showWelcomeModal(), 300);
+  }
+});
 </script>
 </body>
 </html>
