@@ -144,7 +144,7 @@ body::before {
 
 .topbar-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -156,12 +156,14 @@ body::before {
   border: none;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  padding: 8px 14px;
+  padding: 10px 18px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   transition: all 0.15s ease;
   white-space: nowrap;
+  line-height: 1;
+  min-height: 38px;
 }
 .btn-ghost {
   background: transparent;
@@ -187,8 +189,8 @@ body::before {
   border: 1px solid rgba(224,107,107,0.2);
 }
 .btn-danger:hover { background: rgba(224,107,107,0.22); }
-.btn-sm { padding: 5px 10px; font-size: 12px; }
-.btn-icon { padding: 8px; }
+.btn-sm { padding: 8px 14px; font-size: 13px; min-height: 34px; }
+.btn-icon { padding: 10px; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* MAIN CONTENT AREA */
@@ -1000,6 +1002,56 @@ body::before {
 .settings-row-sub { font-size: 12px; color: var(--text-dim); }
 
 /* ============================================================
+   WORKSPACE (File System Access)
+   ============================================================ */
+.workspace-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.workspace-bar.linked { border-color: rgba(126,203,161,0.3); }
+.ws-icon { font-size: 18px; }
+.ws-label { font-size: 13px; color: var(--text-mid); flex: 1; min-width: 180px; }
+.ws-label strong { color: var(--text-hi); }
+.ws-label .ws-path { font-family: var(--font-mono); font-size: 12px; color: var(--sage); }
+
+.ws-changes {
+  background: var(--bg-card);
+  border: 1px solid rgba(240,161,74,0.35);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.ws-changes-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--amber);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ws-change-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-raised);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.ws-change-name { font-size: 13px; color: var(--text-hi); font-weight: 500; flex: 1; min-width: 140px; word-break: break-all; }
+.ws-change-meta { font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); }
+.ws-change-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 10px;
+  font-family: var(--font-mono);
+}
+.ws-change-badge.new-version { background: rgba(74,200,212,0.15); color: var(--teal); }
+.ws-change-badge.new-file { background: rgba(126,203,161,0.15); color: var(--sage); }
+
+/* ============================================================
    TOAST
    ============================================================ */
 #toast-container {
@@ -1076,8 +1128,12 @@ body::before {
   inset: 0;
   z-index: 800;
   pointer-events: none;
+  display: none;
 }
-.onboard-overlay.active { pointer-events: all; }
+.onboard-overlay.active {
+  display: block;
+  pointer-events: none; /* overlay itself passthrough — children handle their own */
+}
 
 /* Dark vignette around highlighted element */
 .onboard-backdrop {
@@ -1087,32 +1143,38 @@ body::before {
   z-index: 801;
   opacity: 0;
   transition: opacity 0.35s ease;
+  pointer-events: all; /* clicks on backdrop advance tour */
+  cursor: pointer;
 }
 .onboard-backdrop.visible { opacity: 1; }
 
-/* Cut-out highlight ring */
+/* Cut-out highlight ring — sits above backdrop */
 .onboard-highlight {
   position: fixed;
   border-radius: 12px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.72), 0 0 0 3px var(--amber), 0 0 32px rgba(240,161,74,0.5);
+  box-shadow:
+    0 0 0 4px var(--amber),
+    0 0 0 9999px rgba(0,0,0,0.72),
+    0 0 40px rgba(240,161,74,0.4);
   z-index: 802;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 
-/* Tour tooltip bubble */
+/* Tour tooltip bubble — must be above everything and interactive */
 .onboard-bubble {
   position: fixed;
-  z-index: 803;
+  z-index: 810;
   background: var(--bg-card);
   border: 1px solid var(--border-hi);
   border-radius: var(--radius-xl);
   padding: 28px 28px 22px;
   width: 340px;
   box-shadow: var(--shadow-float), 0 0 0 1px rgba(240,161,74,0.1);
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: all;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(10px);
 }
 .onboard-bubble.visible {
   opacity: 1;
@@ -1477,6 +1539,24 @@ body::before {
 
         <!-- FILES TAB -->
         <div class="tab-content" id="tab-files">
+
+          <!-- WORKSPACE (File System Access) -->
+          <div class="workspace-bar" id="workspace-bar">
+            <span class="ws-icon" id="ws-icon">📂</span>
+            <div class="ws-label" id="ws-label">
+              <strong>Workspace folder</strong> — link a folder on your PC and Stratum will watch it for changed files, offer one-click commits, and download versions straight into it.
+            </div>
+            <button class="btn btn-teal btn-sm" id="ws-link-btn" onclick="linkWorkspace()">🔗 Link folder</button>
+            <button class="btn btn-ghost btn-sm" id="ws-reconnect-btn" onclick="reconnectWorkspace()" style="display:none">↻ Reconnect</button>
+            <button class="btn btn-ghost btn-sm" id="ws-unlink-btn" onclick="unlinkWorkspace()" style="display:none">✕ Unlink</button>
+          </div>
+
+          <!-- Detected changes -->
+          <div class="ws-changes" id="ws-changes" style="display:none">
+            <div class="ws-changes-title">⚡ Changed in your workspace</div>
+            <div id="ws-changes-list"></div>
+          </div>
+
           <div class="files-toolbar">
             <button class="btn btn-amber" onclick="document.getElementById('file-input').click()">
               ⬆ Upload Files
@@ -1527,29 +1607,234 @@ body::before {
 
         <!-- SETTINGS TAB -->
         <div class="tab-content" id="tab-settings">
-          <div class="settings-section">
-            <div class="settings-section-title">☁ Cloud Storage (Cloudinary)</div>
-            <p style="font-size:13px; color:var(--text-mid); margin-bottom:16px; line-height:1.6;">
-              Stratum uses Cloudinary to store your files securely online — completely free up to 25GB.
-              You only need a free Cloudinary account. Files are stored at permanent URLs, so you can always access them.
+
+          <!-- UPLOAD STATUS BANNER -->
+          <div id="upload-status-banner" style="
+            background: var(--bg-raised); border: 1px solid var(--border-mid);
+            border-radius: var(--radius-md); padding: 14px 18px;
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 24px; font-size: 13px;
+          ">
+            <span id="upload-status-icon" style="font-size:20px">⚙</span>
+            <div>
+              <div id="upload-status-title" style="font-weight:600; color:var(--text-hi); margin-bottom:2px">File storage not set up</div>
+              <div id="upload-status-desc" style="color:var(--text-dim); font-size:12px">Choose one of the options below to enable file uploads. Demo mode works now with no setup.</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto;flex-shrink:0" onclick="checkUploadStatus()">Check status</button>
+          </div>
+
+          <!-- OPTION 0: Cloudflare R2 (large files) -->
+          <div class="settings-section" style="border-color: rgba(240,161,74,0.35)">
+            <div class="settings-section-title">
+              🏔 Cloudflare R2 — Large Files <span style="font-size:11px;background:var(--amber);color:#1a0e00;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">Recommended for 3D artists</span>
+            </div>
+            <p style="font-size:13px; color:var(--text-mid); margin-bottom:16px; line-height:1.65;">
+              Built for <strong style="color:var(--text-hi)">huge files</strong> — multi-GB ZBrush sculpts, Blender files with rigs and packed textures, anything.
+              Stratum automatically splits big files into chunks and reassembles them, so even a 4GB .ztl uploads reliably.
+              <strong style="color:var(--sage)">10GB free, downloads always free</strong>, then just $0.015/GB per month (100GB ≈ $1.50/mo).
             </p>
+            <details style="margin-bottom:16px">
+              <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--amber);padding:8px 0;list-style:none">
+                ▶ Setup guide (~5 min, free)
+              </summary>
+              <div style="background:var(--bg-raised);border-radius:var(--radius-md);padding:16px;margin-top:10px;font-size:13px;color:var(--text-mid);line-height:1.8">
+                <strong style="color:var(--text-hi)">1.</strong> <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--teal)">dash.cloudflare.com</a> → R2 → Create bucket (name it e.g. <code style="font-family:var(--font-mono);color:var(--sage)">stratum-files</code>)<br>
+                <strong style="color:var(--text-hi)">2.</strong> Workers &amp; Pages → Create Worker → paste the code below → Deploy<br>
+                <strong style="color:var(--text-hi)">3.</strong> Worker → Settings → Bindings → Add → R2 bucket → Variable name <code style="font-family:var(--font-mono);color:var(--sage)">BUCKET</code> → pick your bucket<br>
+                <strong style="color:var(--text-hi)">4.</strong> (Recommended) Settings → Variables → add <code style="font-family:var(--font-mono);color:var(--sage)">AUTH_KEY</code> = any password you invent. Enter the same below so only you can upload.<br>
+                <strong style="color:var(--text-hi)">5.</strong> Paste the worker URL below. Done — drag in your gigabytes.
+                <pre style="background:var(--bg-void);border:1px solid var(--border-mid);border-radius:8px;padding:14px;margin-top:12px;font-size:11px;font-family:var(--font-mono);overflow-x:auto;color:var(--text-hi);line-height:1.6">export default {
+  async fetch(request, env) {
+    const cors = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    };
+    if (request.method === 'OPTIONS')
+      return new Response(null, { headers: cors });
+
+    const url = new URL(request.url);
+    const key = url.searchParams.get('key');
+    const action = url.searchParams.get('action');
+    const json = (o, s = 200) => new Response(JSON.stringify(o),
+      { status: s, headers: { ...cors, 'Content-Type': 'application/json' } });
+
+    // Auth for anything that writes (GET stays public for downloads)
+    if (request.method !== 'GET' && env.AUTH_KEY) {
+      if (request.headers.get('X-Auth-Key') !== env.AUTH_KEY)
+        return json({ error: 'Unauthorized' }, 401);
+    }
+    if (!key) return json({ error: 'Missing key' }, 400);
+
+    // Download (streams from R2 — free egress)
+    if (request.method === 'GET') {
+      const obj = await env.BUCKET.get(key);
+      if (!obj) return json({ error: 'Not found' }, 404);
+      return new Response(obj.body, { headers: { ...cors,
+        'Content-Type': obj.httpMetadata?.contentType || 'application/octet-stream',
+        'Content-Length': obj.size,
+        'Content-Disposition': `attachment; filename="${key.split('/').pop()}"` } });
+    }
+    // Delete a version
+    if (request.method === 'DELETE') {
+      await env.BUCKET.delete(key);
+      return json({ ok: true });
+    }
+    // Small file: single PUT
+    if (request.method === 'PUT' && !action) {
+      await env.BUCKET.put(key, request.body, { httpMetadata:
+        { contentType: request.headers.get('Content-Type') || 'application/octet-stream' } });
+      return json({ ok: true, key });
+    }
+    // Multipart for big files
+    if (request.method === 'POST' && action === 'create') {
+      const up = await env.BUCKET.createMultipartUpload(key, { httpMetadata:
+        { contentType: request.headers.get('Content-Type') || 'application/octet-stream' } });
+      return json({ uploadId: up.uploadId });
+    }
+    if (request.method === 'PUT' && action === 'part') {
+      const up = env.BUCKET.resumeMultipartUpload(key, url.searchParams.get('uploadId'));
+      const part = await up.uploadPart(parseInt(url.searchParams.get('part')), request.body);
+      return json({ partNumber: part.partNumber, etag: part.etag });
+    }
+    if (request.method === 'POST' && action === 'complete') {
+      const up = env.BUCKET.resumeMultipartUpload(key, url.searchParams.get('uploadId'));
+      await up.complete(await request.json());
+      return json({ ok: true, key });
+    }
+    if (request.method === 'POST' && action === 'abort') {
+      const up = env.BUCKET.resumeMultipartUpload(key, url.searchParams.get('uploadId'));
+      await up.abort();
+      return json({ ok: true });
+    }
+    return json({ error: 'Bad request' }, 400);
+  }
+};</pre>
+              </div>
+            </details>
             <div class="form-group">
-              <label class="form-label">Cloudinary Cloud Name</label>
+              <label class="form-label">R2 Worker URL</label>
+              <input class="form-input" id="setting-r2-url" placeholder="https://stratum-files.yourname.workers.dev" oninput="saveSettings()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Auth Key <span style="color:var(--text-dim);text-transform:none;font-weight:400">(only if you set AUTH_KEY on the worker)</span></label>
+              <input class="form-input" type="password" id="setting-r2-auth" placeholder="your-secret-password" oninput="saveSettings()">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-amber" onclick="testR2Upload()">⚡ Test R2</button>
+              <span id="r2-test-result" style="font-size:12px;color:var(--text-dim)"></span>
+            </div>
+          </div>
+
+          <!-- OPTION 1: imgbb (zero setup) -->
+          <div class="settings-section">
+            <div class="settings-section-title">
+              🚀 Option 1 — imgbb <span style="font-size:11px;background:var(--sage);color:#0a1a0f;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">Easiest — Images only</span>
+            </div>
+            <p style="font-size:13px; color:var(--text-mid); margin-bottom:16px; line-height:1.65;">
+              <strong style="color:var(--text-hi)">imgbb</strong> is a free image host. It works right away in your browser with no CORS issues. 
+              Free forever, no file size limit for images. <em>Note: images only — not for .blend, .fbx, .psd etc.</em>
+            </p>
+            <div style="background:var(--bg-raised);border-radius:var(--radius-md);padding:16px;margin-bottom:16px;font-size:13px;color:var(--text-mid);line-height:1.8">
+              <strong style="color:var(--text-hi)">Setup (1 minute):</strong><br>
+              1. Go to <a href="https://imgbb.com" target="_blank" style="color:var(--teal)">imgbb.com</a> → Sign up free<br>
+              2. Go to <a href="https://api.imgbb.com" target="_blank" style="color:var(--teal)">api.imgbb.com</a> → Get your free API key<br>
+              3. Paste it below
+            </div>
+            <div class="form-group">
+              <label class="form-label">imgbb API Key</label>
+              <input class="form-input" id="setting-imgbb-key" placeholder="your_imgbb_api_key" oninput="saveSettings()">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-teal" onclick="testImgbbUpload()">⚡ Test imgbb</button>
+              <span style="font-size:12px;color:var(--text-dim)">Uploads images, PNG, JPG, GIF, WEBP</span>
+            </div>
+          </div>
+
+          <!-- OPTION 2: Cloudinary direct -->
+          <div class="settings-section">
+            <div class="settings-section-title">
+              ☁ Option 2 — Cloudinary Direct <span style="font-size:11px;background:var(--teal);color:#041416;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">All file types</span>
+            </div>
+            <p style="font-size:13px; color:var(--text-mid); margin-bottom:16px; line-height:1.65;">
+              Cloudinary supports <strong style="color:var(--text-hi)">any file type</strong> including .blend, .fbx, .psd, .obj. Free up to 25GB.
+              Direct uploads from your browser work as long as your upload preset is set to <strong style="color:var(--amber)">Unsigned</strong>.
+            </p>
+            <div style="background:var(--bg-raised);border-radius:var(--radius-md);padding:16px;margin-bottom:16px;font-size:13px;color:var(--text-mid);line-height:1.8">
+              <strong style="color:var(--text-hi)">Setup:</strong><br>
+              1. <a href="https://cloudinary.com" target="_blank" style="color:var(--teal)">cloudinary.com</a> → Sign up free<br>
+              2. Dashboard → Settings → Upload tab → <strong style="color:var(--text-hi)">Add upload preset</strong><br>
+              3. Set <strong style="color:var(--amber)">Signing mode: Unsigned</strong> — this is the key step!<br>
+              4. Copy the preset name and your Cloud Name (shown at top of dashboard)
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cloud Name</label>
               <input class="form-input" id="setting-cloud-name" placeholder="your-cloud-name" oninput="saveSettings()">
             </div>
             <div class="form-group">
-              <label class="form-label">Upload Preset (unsigned)</label>
-              <input class="form-input" id="setting-upload-preset" placeholder="stratum_uploads" oninput="saveSettings()">
+              <label class="form-label">Upload Preset <span style="color:var(--amber)">(must be set to Unsigned!)</span></label>
+              <input class="form-input" id="setting-upload-preset" placeholder="stratum_unsigned" oninput="saveSettings()">
             </div>
-            <div style="font-size:12px; color:var(--text-dim); line-height:1.6; background:var(--bg-raised); padding:12px; border-radius:var(--radius-sm);">
-              <strong style="color:var(--text-mid);">Setup:</strong> Go to cloudinary.com → Free account → Settings → Upload → Add upload preset → set to "Unsigned" → copy preset name and cloud name here.
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-teal" onclick="testCloudinaryDirect()">⚡ Test Cloudinary</button>
+              <span id="cloudinary-test-result" style="font-size:12px;color:var(--text-dim)"></span>
             </div>
+          </div>
+
+          <!-- OPTION 3: Cloudflare Worker proxy -->
+          <div class="settings-section">
+            <div class="settings-section-title">
+              🔧 Option 3 — Cloudinary via Worker Proxy <span style="font-size:11px;background:var(--lavender);color:#12103a;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">Advanced</span>
+            </div>
+            <p style="font-size:13px; color:var(--text-mid); margin-bottom:16px; line-height:1.65;">
+              If direct Cloudinary uploads don't work (some networks block them), a Cloudflare Worker acts as a proxy. 
+              Deploy it once for free in ~2 minutes.
+            </p>
+            <details style="margin-bottom:16px">
+              <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--amber);padding:8px 0;list-style:none">
+                ▶ Show Worker code (copy & deploy to workers.cloudflare.com)
+              </summary>
+              <pre style="background:var(--bg-void);border:1px solid var(--border-mid);border-radius:8px;padding:14px;margin-top:10px;font-size:11px;font-family:var(--font-mono);overflow-x:auto;color:var(--text-hi);line-height:1.6">export default {
+  async fetch(request) {
+    if (request.method === 'OPTIONS')
+      return new Response(null, { headers: corsHeaders() });
+    if (request.method !== 'POST')
+      return new Response('Method not allowed', { status: 405 });
+    const form = await request.formData();
+    const cloudName = form.get('cloud_name');
+    const body = new FormData();
+    body.append('file', form.get('file'));
+    body.append('upload_preset', form.get('upload_preset'));
+    body.append('folder', form.get('folder') || 'stratum');
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+      { method: 'POST', body }
+    );
+    const data = await res.json();
+    return new Response(JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders() }
+    });
+  }
+};
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': '*',
+  };
+}</pre>
+            </details>
+            <div class="form-group">
+              <label class="form-label">Cloudflare Worker URL</label>
+              <input class="form-input" id="setting-worker-url" placeholder="https://stratum-upload.yourname.workers.dev" oninput="saveSettings()">
+            </div>
+            <button class="btn btn-ghost" onclick="testUpload()">⚡ Test Worker</button>
           </div>
 
           <div class="settings-section">
             <div class="settings-section-title">⚙ GitHub Sync (optional)</div>
             <p style="font-size:13px; color:var(--text-mid); margin-bottom:16px; line-height:1.6;">
-              Save your project plan (not files) to a private GitHub repository for backup and sync across devices.
+              Back up your project plan to a private GitHub repository. Only the tiny JSON manifest is synced — your actual files stay on Cloudinary.
             </p>
             <div class="form-group">
               <label class="form-label">Personal Access Token</label>
@@ -1575,7 +1860,7 @@ body::before {
             <div class="settings-row">
               <div>
                 <div class="settings-row-label">Delete this project</div>
-                <div class="settings-row-sub">Permanently removes the project from Stratum (files on Cloudinary are not deleted)</div>
+                <div class="settings-row-sub">Removes the project from Stratum. Files on Cloudinary are not deleted.</div>
               </div>
               <button class="btn btn-danger btn-sm" onclick="deleteCurrentProject()">Delete Project</button>
             </div>
@@ -1643,6 +1928,7 @@ body::before {
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
           <a class="btn btn-teal btn-sm" id="file-modal-download" target="_blank">⬇ Open / Download</a>
+          <button class="btn btn-ghost btn-sm" id="file-modal-to-ws" onclick="downloadToWorkspace(currentFileId)" style="display:none">📂 To workspace</button>
           <button class="btn btn-ghost btn-sm" onclick="addVersionToCurrentFile()">＋ New Version</button>
           <button class="btn btn-danger btn-sm" onclick="deleteCurrentFile()">🗑 Remove</button>
         </div>
@@ -1789,11 +2075,15 @@ body::before {
    STATE
    ============================================================ */
 let state = {
-  projects: [],       // array of project objects
+  projects: [],
   activeProjectId: null,
   settings: {
+    r2Url: '',
+    r2Auth: '',
+    imgbbKey: '',
     cloudName: '',
     uploadPreset: '',
+    workerUrl: '',
     ghToken: '',
     ghUser: '',
     ghRepo: ''
@@ -1829,13 +2119,18 @@ function init() {
   setupDragDrop();
 
   // Load settings inputs
+  document.getElementById('setting-r2-url').value = state.settings.r2Url || '';
+  document.getElementById('setting-r2-auth').value = state.settings.r2Auth || '';
+  document.getElementById('setting-imgbb-key').value = state.settings.imgbbKey || '';
   document.getElementById('setting-cloud-name').value = state.settings.cloudName;
   document.getElementById('setting-upload-preset').value = state.settings.uploadPreset;
+  document.getElementById('setting-worker-url').value = state.settings.workerUrl || '';
   document.getElementById('setting-gh-token').value = state.settings.ghToken;
   document.getElementById('setting-gh-user').value = state.settings.ghUser;
   document.getElementById('setting-gh-repo').value = state.settings.ghRepo;
 
   updateSyncStatus();
+  checkUploadStatus();
 
   // Auto-open last project
   if (state.activeProjectId && getProject(state.activeProjectId)) {
@@ -1862,15 +2157,18 @@ function loadFromStorage() {
   } catch(e) {}
 }
 function saveSettings() {
+  state.settings.r2Url = document.getElementById('setting-r2-url').value.trim().replace(/\/+$/, '');
+  state.settings.r2Auth = document.getElementById('setting-r2-auth').value.trim();
+  state.settings.imgbbKey = document.getElementById('setting-imgbb-key').value.trim();
   state.settings.cloudName = document.getElementById('setting-cloud-name').value.trim();
   state.settings.uploadPreset = document.getElementById('setting-upload-preset').value.trim();
+  state.settings.workerUrl = document.getElementById('setting-worker-url').value.trim();
   state.settings.ghToken = document.getElementById('setting-gh-token').value.trim();
   state.settings.ghUser = document.getElementById('setting-gh-user').value.trim();
   state.settings.ghRepo = document.getElementById('setting-gh-repo').value.trim();
-  try {
-    localStorage.setItem('stratum_settings', JSON.stringify(state.settings));
-  } catch(e) {}
+  try { localStorage.setItem('stratum_settings', JSON.stringify(state.settings)); } catch(e) {}
   updateSyncStatus();
+  checkUploadStatus();
 }
 function loadSettings() {
   try {
@@ -1894,7 +2192,8 @@ function fmtSize(bytes) {
   if (!bytes) return '';
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/1024/1024).toFixed(1) + ' MB';
+  if (bytes < 1024*1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+  return (bytes/1024/1024/1024).toFixed(2) + ' GB';
 }
 function getFileType(name) {
   const ext = (name||'').split('.').pop().toLowerCase();
@@ -1963,6 +2262,7 @@ function openProject(id) {
   renderFiles();
   updateProjectStats();
   updateStratumFilters();
+  initWorkspaceForProject(id);
 }
 
 function onProjectTitleChange() {
@@ -2263,11 +2563,14 @@ function updateProjectStats() {
   const totalAxioms = p.strata.reduce((n, s) => n + s.axioms.length, 0);
   const doneAxioms = p.strata.reduce((n, s) => n + s.axioms.filter(a=>a.done).length, 0);
   const pct = totalAxioms ? Math.round(doneAxioms/totalAxioms*100) : 0;
+  const storageBytes = p.files.reduce((n, f) =>
+    n + f.versions.reduce((m, v) => m + (v.size || 0), 0), 0);
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('project-stats').innerHTML = `
     <div><strong>${p.strata.length}</strong> strata</div>
     <div><strong>${doneAxioms}/${totalAxioms}</strong> tasks done</div>
     <div><strong>${p.files.length}</strong> files</div>
+    ${storageBytes ? `<div><strong>${fmtSize(storageBytes)}</strong> stored</div>` : ''}
     <div><strong>${pct}%</strong> complete</div>
   `;
 }
@@ -2305,22 +2608,65 @@ function handleFileUpload(event) {
   if (files.length) processFiles(files);
 }
 
+/* ============================================================
+   UPLOAD STATUS CHECK
+   ============================================================ */
+function checkUploadStatus() {
+  const s = state.settings;
+  const banner = document.getElementById('upload-status-banner');
+  if (!banner) return;
+  const icon = document.getElementById('upload-status-icon');
+  const title = document.getElementById('upload-status-title');
+  const desc = document.getElementById('upload-status-desc');
+  if (!icon) return;
+
+  if (s.r2Url) {
+    icon.textContent = '🏔'; title.style.color = 'var(--sage)';
+    title.textContent = 'Cloudflare R2 ready — large files supported';
+    desc.textContent = 'Any file type, any size — multi-GB ZBrush and Blender files upload in chunks automatically. Downloads are free forever.';
+  } else if (s.workerUrl) {
+    icon.textContent = '✅'; title.style.color = 'var(--sage)';
+    title.textContent = 'Cloudinary Worker ready';
+    desc.textContent = `Uploads route via ${s.workerUrl.slice(0,40)}… Note: Cloudinary free tier caps non-image files at 10MB — set up R2 for big 3D files.`;
+  } else if (s.cloudName && s.uploadPreset) {
+    icon.textContent = '☁'; title.style.color = 'var(--teal)';
+    title.textContent = 'Cloudinary direct configured';
+    desc.textContent = `Cloud: ${s.cloudName}. Preset must be Unsigned. Free tier caps raw files at 10MB — use R2 for big sculpts.`;
+  } else if (s.imgbbKey) {
+    icon.textContent = '🖼'; title.style.color = 'var(--amber)';
+    title.textContent = 'imgbb ready — images only';
+    desc.textContent = 'PNG, JPG, GIF, WEBP supported. For 3D files set up Cloudflare R2 above.';
+  } else {
+    icon.textContent = '⚙'; title.style.color = 'var(--text-mid)';
+    title.textContent = 'File storage not configured';
+    desc.textContent = 'Files will save in Demo Mode (browser session only). For big 3D files, set up Cloudflare R2 — it takes ~5 minutes.';
+  }
+}
+
+/* ============================================================
+   UPLOAD ROUTER — picks best available provider
+   ============================================================ */
+function hasAnyStorage() {
+  const s = state.settings;
+  return !!(s.r2Url || s.workerUrl || (s.cloudName && s.uploadPreset) || s.imgbbKey);
+}
+
 async function processFiles(files) {
-  if (!state.settings.cloudName || !state.settings.uploadPreset) {
-    // Offer demo mode without cloudinary
+  if (!hasAnyStorage()) {
     const useDemoMode = confirm(
-      "Cloudinary is not configured yet.\n\n" +
-      "To store files permanently, go to the ⚙ Settings tab and enter your Cloudinary details (it's free!).\n\n" +
-      "For now, would you like to add files in Demo Mode? (Files will only be stored temporarily in your browser session — not permanently hosted online.)"
+      "No file storage is configured yet.\n\n" +
+      "Your files will be saved in Demo Mode — they'll appear in Stratum during this session but won't be hosted online permanently.\n\n" +
+      "Go to ⚙ Settings to set up Cloudflare R2 (best — handles huge 3D files) or imgbb (easiest — images only).\n\n" +
+      "Continue in Demo Mode?"
     );
     if (!useDemoMode) return;
     processFilesDemo(files);
     return;
   }
-  await uploadFilesToCloudinary(files);
+  await uploadFiles(files);
 }
 
-async function uploadFilesToCloudinary(files) {
+async function uploadFiles(files) {
   const progress = document.getElementById('upload-progress');
   const fill = document.getElementById('up-fill');
   const status = document.getElementById('up-status');
@@ -2328,63 +2674,324 @@ async function uploadFilesToCloudinary(files) {
 
   const p = getActiveProject();
   let uploaded = 0;
+  const errors = [];
 
   for (const file of files) {
-    status.textContent = `Uploading ${file.name}...`;
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', state.settings.uploadPreset);
-      formData.append('folder', `stratum/${p.id}`);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${state.settings.cloudName}/auto/upload`, {
-        method: 'POST',
-        body: formData
+      const { url, size } = await uploadSingleFile(file, p.id, (done, total) => {
+        const pctFile = total ? done / total : 0;
+        const pctAll = (uploaded + pctFile) / files.length;
+        fill.style.width = Math.round(pctAll * 100) + '%';
+        status.textContent = `${file.name} — ${fmtSize(done)} / ${fmtSize(total)}`;
       });
-
-      if (!res.ok) throw new Error('Upload failed: ' + res.status);
-      const data = await res.json();
-
-      addFileToProject(p, file, data.secure_url, data.bytes);
+      addFileToProject(p, file, url, size);
       uploaded++;
-      fill.style.width = Math.round(uploaded/files.length*100) + '%';
+      fill.style.width = Math.round(uploaded / files.length * 100) + '%';
+      // Save after each file so a later failure doesn't lose completed uploads
+      renderFiles(); updateProjectStats(); saveToStorage();
     } catch(e) {
-      toast(`Failed to upload ${file.name}: ${e.message}`, 'error');
+      errors.push(`${file.name}: ${e.message}`);
     }
   }
 
-  setTimeout(() => {
-    progress.classList.remove('show');
-    fill.style.width = '0%';
-  }, 1500);
+  setTimeout(() => { progress.classList.remove('show'); fill.style.width = '0%'; }, 1500);
 
-  if (uploaded > 0) {
-    toast(`${uploaded} file${uploaded>1?'s':''} uploaded!`, 'success');
-    renderFiles();
-    updateProjectStats();
-    saveToStorage();
+  if (uploaded > 0) toast(`${uploaded} file${uploaded > 1 ? 's' : ''} uploaded! 🎉`, 'success');
+  errors.forEach(e => toast('⚠ ' + e, 'error'));
+}
+
+async function uploadSingleFile(file, projectId, onProgress) {
+  const s = state.settings;
+  const type = getFileType(file.name);
+
+  // Priority: R2 (handles everything incl. huge files) > Cloudinary Worker > Cloudinary direct > imgbb
+  if (s.r2Url) {
+    return await uploadViaR2(file, projectId, onProgress);
+  }
+  if (s.workerUrl) {
+    return await uploadViaWorker(file, projectId);
+  }
+  if (s.cloudName && s.uploadPreset) {
+    return await uploadDirectCloudinary(file, projectId);
+  }
+  if (s.imgbbKey) {
+    if (type !== 'image') {
+      throw new Error('imgbb only supports images. Set up Cloudflare R2 for 3D/PSD files.');
+    }
+    return await uploadViaImgbb(file);
+  }
+  throw new Error('No storage configured');
+}
+
+/* ============================================================
+   CLOUDFLARE R2 — CHUNKED UPLOAD ENGINE
+   Handles multi-GB files: splits into 64MB parts, retries each
+   part up to 3 times, reassembles server-side via R2 multipart.
+   ============================================================ */
+const R2_CHUNK_SIZE = 64 * 1024 * 1024;      // 64MB — safely under Worker's 100MB body cap
+const R2_MULTIPART_THRESHOLD = 80 * 1024 * 1024; // single PUT below this
+
+function r2Headers(extra = {}) {
+  const h = { ...extra };
+  if (state.settings.r2Auth) h['X-Auth-Key'] = state.settings.r2Auth;
+  return h;
+}
+
+function r2Key(projectId, fileName) {
+  // Unique key per upload so versions never overwrite each other
+  const safe = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+  return `stratum/${projectId}/${Date.now().toString(36)}-${safe}`;
+}
+
+async function r2Fetch(url, opts, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, opts);
+      if (res.status === 401) throw Object.assign(new Error('Unauthorized — check your R2 Auth Key'), { fatal: true });
+      if (!res.ok) throw new Error('R2 worker returned ' + res.status);
+      return await res.json();
+    } catch(e) {
+      lastErr = e;
+      if (e.fatal) throw e;
+      if (i < attempts - 1) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
+async function uploadViaR2(file, projectId, onProgress) {
+  const base = state.settings.r2Url;
+  const key = r2Key(projectId, file.name);
+  const contentType = file.type || 'application/octet-stream';
+  onProgress && onProgress(0, file.size);
+
+  if (file.size <= R2_MULTIPART_THRESHOLD) {
+    // Small file: one PUT
+    await r2Fetch(`${base}/?key=${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      headers: r2Headers({ 'Content-Type': contentType }),
+      body: file
+    });
+    onProgress && onProgress(file.size, file.size);
+    return { url: `${base}/?key=${encodeURIComponent(key)}`, size: file.size };
+  }
+
+  // Big file: multipart
+  const { uploadId } = await r2Fetch(
+    `${base}/?key=${encodeURIComponent(key)}&action=create`,
+    { method: 'POST', headers: r2Headers({ 'Content-Type': contentType }) }
+  );
+
+  const totalParts = Math.ceil(file.size / R2_CHUNK_SIZE);
+  const parts = [];
+  let bytesDone = 0;
+
+  try {
+    for (let partNum = 1; partNum <= totalParts; partNum++) {
+      const start = (partNum - 1) * R2_CHUNK_SIZE;
+      const chunk = file.slice(start, Math.min(start + R2_CHUNK_SIZE, file.size));
+      const part = await r2Fetch(
+        `${base}/?key=${encodeURIComponent(key)}&action=part&uploadId=${encodeURIComponent(uploadId)}&part=${partNum}`,
+        { method: 'PUT', headers: r2Headers(), body: chunk }
+      );
+      parts.push({ partNumber: part.partNumber, etag: part.etag });
+      bytesDone += chunk.size;
+      onProgress && onProgress(bytesDone, file.size);
+    }
+
+    await r2Fetch(
+      `${base}/?key=${encodeURIComponent(key)}&action=complete&uploadId=${encodeURIComponent(uploadId)}`,
+      { method: 'POST', headers: r2Headers({ 'Content-Type': 'application/json' }), body: JSON.stringify(parts) }
+    );
+  } catch(e) {
+    // Clean up the abandoned multipart upload so it doesn't count against storage
+    try {
+      await fetch(`${base}/?key=${encodeURIComponent(key)}&action=abort&uploadId=${encodeURIComponent(uploadId)}`,
+        { method: 'POST', headers: r2Headers() });
+    } catch(_) {}
+    throw e;
+  }
+
+  return { url: `${base}/?key=${encodeURIComponent(key)}`, size: file.size };
+}
+
+async function deleteFromR2(url) {
+  // Only attempt if this is one of our R2 worker URLs
+  const base = state.settings.r2Url;
+  if (!base || !url || !url.startsWith(base)) return false;
+  try {
+    const key = new URL(url).searchParams.get('key');
+    if (!key) return false;
+    await r2Fetch(`${base}/?key=${encodeURIComponent(key)}`, { method: 'DELETE', headers: r2Headers() });
+    return true;
+  } catch(e) { return false; }
+}
+
+async function testR2Upload() {
+  const result = document.getElementById('r2-test-result');
+  if (!state.settings.r2Url) { toast('Enter your R2 Worker URL first', 'error'); return; }
+  try {
+    if (result) { result.style.color = 'var(--text-dim)'; result.textContent = 'Testing…'; }
+    const blob = new Blob(['stratum r2 test'], { type: 'text/plain' });
+    const testFile = new File([blob], 'stratum_test.txt', { type: 'text/plain' });
+    const { url } = await uploadViaR2(testFile, 'test', null);
+    // Verify it downloads back
+    const check = await fetch(url);
+    if (!check.ok) throw new Error('Uploaded but download failed: ' + check.status);
+    await deleteFromR2(url); // clean up
+    if (result) { result.style.color = 'var(--sage)'; result.textContent = '✅ Upload + download + delete all working!'; }
+    toast('✅ R2 works! Large files are ready to go.', 'success');
+    checkUploadStatus();
+  } catch(e) {
+    if (result) { result.style.color = 'var(--rose)'; result.textContent = '✗ ' + e.message; }
+    toast('R2 test failed: ' + e.message, 'error');
+  }
+}
+
+async function uploadViaImgbb(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(
+    `https://api.imgbb.com/1/upload?key=${encodeURIComponent(state.settings.imgbbKey)}`,
+    { method: 'POST', body: formData }
+  );
+  if (!res.ok) throw new Error('imgbb error: ' + res.status);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error?.message || 'imgbb upload failed');
+  return {
+    url: data.data.url,
+    size: data.data.size || file.size
+  };
+}
+
+async function uploadViaWorker(file, projectId) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', `stratum/${projectId}`);
+  if (state.settings.cloudName) formData.append('cloud_name', state.settings.cloudName);
+  if (state.settings.uploadPreset) formData.append('upload_preset', state.settings.uploadPreset);
+
+  const res = await fetch(state.settings.workerUrl, { method: 'POST', body: formData });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => String(res.status));
+    throw new Error('Worker error: ' + txt.slice(0, 120));
+  }
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || 'Worker upload failed');
+  return { url: data.secure_url, size: data.bytes };
+}
+
+async function uploadDirectCloudinary(file, projectId) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', state.settings.uploadPreset);
+  formData.append('folder', `stratum/${projectId}`);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${state.settings.cloudName}/auto/upload`,
+    { method: 'POST', body: formData }
+  );
+  // Cloudinary returns 400 JSON on auth errors, not a network error
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data) {
+    throw new Error(`Cloudinary ${res.status} — is your upload preset set to Unsigned?`);
+  }
+  if (data.error) {
+    const msg = data.error.message || '';
+    if (msg.includes('preset') || msg.includes('unsigned')) {
+      throw new Error('Preset must be set to Unsigned in Cloudinary Settings → Upload → Upload Presets');
+    }
+    throw new Error(msg || 'Cloudinary upload failed');
+  }
+  return { url: data.secure_url, size: data.bytes };
+}
+
+/* ============================================================
+   TEST UPLOAD BUTTONS
+   ============================================================ */
+async function testImgbbUpload() {
+  if (!state.settings.imgbbKey) {
+    toast('Enter your imgbb API key first', 'error'); return;
+  }
+  try {
+    toast('Testing imgbb with a tiny image…', 'info');
+    const canvas = document.createElement('canvas');
+    canvas.width = 2; canvas.height = 2;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f0a14a'; ctx.fillRect(0, 0, 2, 2);
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const testFile = new File([blob], 'stratum_test.png', { type: 'image/png' });
+    const { url } = await uploadViaImgbb(testFile);
+    toast('✅ imgbb works! Images will upload fine.', 'success');
+    document.getElementById('upload-status-banner') && checkUploadStatus();
+  } catch(e) {
+    toast('imgbb test failed: ' + e.message, 'error');
+  }
+}
+
+async function testCloudinaryDirect() {
+  const result = document.getElementById('cloudinary-test-result');
+  if (!state.settings.cloudName || !state.settings.uploadPreset) {
+    toast('Fill in Cloud Name and Upload Preset first', 'error'); return;
+  }
+  try {
+    if (result) { result.style.color = 'var(--text-dim)'; result.textContent = 'Testing…'; }
+    toast('Testing Cloudinary direct upload…', 'info');
+    const canvas = document.createElement('canvas');
+    canvas.width = 2; canvas.height = 2;
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const testFile = new File([blob], 'stratum_test.png', { type: 'image/png' });
+    const { url } = await uploadDirectCloudinary(testFile, 'test');
+    if (result) { result.style.color = 'var(--sage)'; result.textContent = '✅ Working!'; }
+    toast('✅ Cloudinary direct upload works!', 'success');
+    checkUploadStatus();
+  } catch(e) {
+    if (result) { result.style.color = 'var(--rose)'; result.textContent = '✗ ' + e.message; }
+    toast('Cloudinary test failed: ' + e.message, 'error');
+  }
+}
+
+async function testUpload() {
+  if (!state.settings.workerUrl) {
+    toast('Enter your Worker URL first', 'error'); return;
+  }
+  try {
+    toast('Testing Worker upload…', 'info');
+    const canvas = document.createElement('canvas');
+    canvas.width = 2; canvas.height = 2;
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const testFile = new File([blob], 'stratum_test.png', { type: 'image/png' });
+    const { url } = await uploadViaWorker(testFile, 'test');
+    toast('✅ Worker upload works! URL: ' + url.slice(0, 50) + '…', 'success');
+    checkUploadStatus();
+  } catch(e) {
+    toast('Worker test failed: ' + e.message, 'error');
   }
 }
 
 function processFilesDemo(files) {
   const p = getActiveProject();
+  let count = 0;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const url = e.target.result; // data URL — temporary
-      addFileToProject(p, file, url, file.size);
-      renderFiles();
-      updateProjectStats();
-      saveToStorage();
+      addFileToProject(p, file, e.target.result, file.size);
+      count++;
+      if (count === files.length) {
+        renderFiles();
+        updateProjectStats();
+        saveToStorage();
+        toast(`${count} file(s) added in demo mode`, 'info');
+      }
     };
     reader.readAsDataURL(file);
   });
-  toast(`${files.length} file(s) added in demo mode`, 'info');
 }
 
 function addFileToProject(project, file, url, size) {
   const type = getFileType(file.name);
-  const fileObj = {
+  project.files.push({
     id: uid(),
     name: file.name,
     type,
@@ -2392,16 +2999,13 @@ function addFileToProject(project, file, url, size) {
     stratumId: null,
     notes: '',
     versions: [{
-      id: uid(),
-      url,
+      id: uid(), url,
       note: 'Initial upload',
       uploadedAt: timestamp(),
-      size,
-      current: true
+      size, current: true
     }],
     addedAt: timestamp()
-  };
-  project.files.push(fileObj);
+  });
 }
 
 function addVersionToCurrentFile() {
@@ -2415,48 +3019,36 @@ function addVersionToCurrentFile() {
   input.onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    const note = prompt('Version note (optional):') || '';
-
-    if (state.settings.cloudName && state.settings.uploadPreset) {
+    const note = prompt('Version note (e.g. "Added wing detail"):') || '';
+    if (hasAnyStorage()) {
       try {
-        toast('Uploading new version...', 'info');
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', state.settings.uploadPreset);
-        formData.append('folder', `stratum/${p.id}`);
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${state.settings.cloudName}/auto/upload`, { method:'POST', body:formData });
-        const data = await res.json();
-
+        toast('Uploading new version…', 'info');
+        const { url, size } = await uploadSingleFile(file, p.id);
         f.versions.forEach(v => v.current = false);
-        f.versions.push({ id:uid(), url:data.secure_url, note, uploadedAt:timestamp(), size:data.bytes, current:true });
-        toast('New version uploaded!', 'success');
-      } catch(e) {
-        toast('Upload failed: ' + e.message, 'error');
-        return;
+        f.versions.push({ id: uid(), url, note, uploadedAt: timestamp(), size, current: true });
+        toast('New version uploaded! ✓', 'success');
+        renderFileModal(currentFileId);
+        renderFiles();
+        saveToStorage();
+      } catch(err) {
+        toast('Upload failed: ' + err.message, 'error');
       }
     } else {
-      // Demo mode
       const reader = new FileReader();
       reader.onload = (re) => {
         f.versions.forEach(v => v.current = false);
-        f.versions.push({ id:uid(), url:re.target.result, note, uploadedAt:timestamp(), size:file.size, current:true });
+        f.versions.push({ id: uid(), url: re.target.result, note, uploadedAt: timestamp(), size: file.size, current: true });
         renderFileModal(currentFileId);
         renderFiles();
         saveToStorage();
         toast('New version added (demo mode)', 'info');
       };
       reader.readAsDataURL(file);
-      return;
     }
-
-    renderFileModal(currentFileId);
-    renderFiles();
-    saveToStorage();
   };
   input.click();
 }
+
 
 function renderFiles() {
   const p = getActiveProject();
@@ -2474,8 +3066,8 @@ function renderFiles() {
     <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
       <div class="drop-icon">🎨</div>
       <div class="drop-title">Drop files here or click Upload</div>
-      <div class="drop-sub">Images, 3D files, videos, and more</div>
-      <div class="drop-types">PNG · JPG · PSD · ZBP · OBJ · FBX · BLEND · MP4 · and more</div>
+      <div class="drop-sub">Images, sculpts, rigs, textures — multi-GB files welcome with R2</div>
+      <div class="drop-types">PNG · PSD · ZTL · ZPR · OBJ · FBX · BLEND · MP4 · any file</div>
     </div>
   `;
 
@@ -2509,6 +3101,7 @@ function renderFiles() {
       </div>
       <div class="file-actions-row">
         <a class="btn btn-ghost btn-sm" href="${current?.url}" target="_blank" onclick="event.stopPropagation()">⬇ Open</a>
+        ${wsHandle ? `<button class="btn btn-teal btn-sm" title="Download into your linked workspace folder" onclick="event.stopPropagation(); downloadToWorkspace('${f.id}')">📂</button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openFileModal('${f.id}')">✎ Details</button>
       </div>
     </div>
@@ -2550,6 +3143,8 @@ function renderFileModal(fileId) {
   document.getElementById('file-modal-name').textContent = f.name;
   document.getElementById('file-modal-notes').value = f.notes||'';
   document.getElementById('file-modal-download').href = current?.url||'#';
+  const wsBtn = document.getElementById('file-modal-to-ws');
+  if (wsBtn) wsBtn.style.display = wsHandle ? '' : 'none';
 
   // Preview
   const preview = document.getElementById('file-modal-preview');
@@ -2570,7 +3165,15 @@ function renderFileModal(fileId) {
     return;
   }
 
-  vtl.innerHTML = [...f.versions].reverse().map((v, i) => `
+  const totalBytes = f.versions.reduce((n, v) => n + (v.size || 0), 0);
+  const footprint = f.versions.length > 1
+    ? `<div style="font-size:11px;color:var(--text-dim);font-family:var(--font-mono);margin-bottom:10px">
+         ${f.versions.length} versions · ${fmtSize(totalBytes)} total storage
+         ${f.versions.length > 3 ? ' · <span style="color:var(--amber)">tip: prune old versions of big files to save space</span>' : ''}
+       </div>`
+    : '';
+
+  vtl.innerHTML = footprint + [...f.versions].reverse().map((v, i) => `
     <div class="version-entry">
       <div class="v-dot ${v.current?'current':''}" title="${v.current?'Current version':'Click to restore'}"
         onclick="${!v.current?`restoreVersion('${fileId}','${v.id}')`:''}"
@@ -2583,9 +3186,26 @@ function renderFileModal(fileId) {
       <div class="v-actions">
         <a class="btn btn-ghost btn-sm" href="${v.url}" target="_blank">Open</a>
         ${!v.current ? `<button class="btn btn-teal btn-sm" onclick="restoreVersion('${fileId}','${v.id}')">Restore</button>` : ''}
+        ${!v.current && f.versions.length > 1 ? `<button class="axiom-del" title="Delete this version permanently" onclick="deleteVersion('${fileId}','${v.id}')">×</button>` : ''}
       </div>
     </div>
   `).join('');
+}
+
+function deleteVersion(fileId, versionId) {
+  const p = getActiveProject();
+  const f = p?.files.find(x => x.id === fileId);
+  if (!f) return;
+  const v = f.versions.find(x => x.id === versionId);
+  if (!v || v.current) return;
+  if (!confirm(`Permanently delete this version (${fmtSize(v.size)})?\n\nIf it's stored on Cloudflare R2, the storage will be freed. This cannot be undone.`)) return;
+
+  deleteFromR2(v.url); // fire & forget — frees storage if it's an R2 URL
+  f.versions = f.versions.filter(x => x.id !== versionId);
+  saveToStorage();
+  renderFileModal(fileId);
+  renderFiles();
+  toast('Version deleted — storage freed', 'success');
 }
 
 function restoreVersion(fileId, versionId) {
@@ -2620,7 +3240,11 @@ function deleteCurrentFile() {
   const p = getActiveProject();
   if (!p || !currentFileId) return;
   const f = p.files.find(x => x.id === currentFileId);
-  if (!confirm(`Remove "${f?.name}" from this project?`)) return;
+  if (!confirm(`Remove "${f?.name}" from this project?\n\nVersions stored on Cloudflare R2 will also be deleted to free up your storage.`)) return;
+
+  // Free R2 storage for every version (fire & forget)
+  if (f) f.versions.forEach(v => deleteFromR2(v.url));
+
   p.files = p.files.filter(x => x.id !== currentFileId);
   saveToStorage();
   closeModal('file-modal');
@@ -2628,6 +3252,7 @@ function deleteCurrentFile() {
   updateProjectStats();
   toast('File removed from project', 'info');
 }
+
 
 /* ============================================================
    GITHUB SYNC
@@ -2954,6 +3579,444 @@ function loadDemoProject() {
 }
 
 /* ============================================================
+   WORKSPACE — File System Access API
+   Links a local folder per project. Stratum polls it for
+   changed files, offers one-click version commits, and can
+   download cloud versions directly into the folder.
+   Chromium-only (Chrome / Edge); other browsers see a notice.
+   ============================================================ */
+const WS_POLL_MS = 4000;
+const WS_IGNORE = [
+  /^\./,                      // hidden files
+  /\.blend\d+$/i,             // Blender numbered backups (.blend1, .blend2)
+  /\.(tmp|temp|bak|autosave|swp|part|crdownload)$/i,
+  /^autosave/i, /_autosave/i, // ZBrush / generic autosaves
+  /^QuickSave/i,              // ZBrush QuickSave
+  /~$/                        // editor temp
+];
+
+let wsHandle = null;          // FileSystemDirectoryHandle for active project
+let wsSnapshot = {};          // name -> { size, mtime }  (persisted per project)
+let wsPending = {};           // name -> { size, mtime, seen }  stability tracker
+let wsChanges = [];           // stable changed files awaiting commit
+let wsTimer = null;
+
+function wsSupported() { return 'showDirectoryPicker' in window; }
+
+/* ---------- tiny IndexedDB store for directory handles ---------- */
+function idb() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('stratum-ws', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function idbSet(key, val) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(val, key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function idbGet(key) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readonly');
+    const rq = tx.objectStore('handles').get(key);
+    rq.onsuccess = () => res(rq.result || null);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbDel(key) {
+  const db = await idb();
+  return new Promise((res) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').delete(key);
+    tx.oncomplete = res;
+  });
+}
+
+/* ---------- link / reconnect / unlink ---------- */
+async function linkWorkspace() {
+  if (!wsSupported()) {
+    toast('Workspace folders need Chrome or Edge (File System Access API)', 'error');
+    return;
+  }
+  const p = getActiveProject();
+  if (!p) { toast('Open a project first', 'error'); return; }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'stratum-ws' });
+    wsHandle = handle;
+    await idbSet('ws_' + p.id, handle);
+    // Baseline snapshot: current folder contents are NOT flagged as changes
+    wsSnapshot = await wsScanRaw();
+    localStorage.setItem('ws_snap_' + p.id, JSON.stringify(wsSnapshot));
+    wsPending = {}; wsChanges = [];
+    renderWorkspaceUI();
+    startWsPolling();
+    toast(`Workspace linked: ${handle.name} 📂`, 'success');
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Could not link folder: ' + e.message, 'error');
+  }
+}
+
+async function reconnectWorkspace() {
+  const p = getActiveProject();
+  if (!p || !wsHandle) return;
+  try {
+    const perm = await wsHandle.requestPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      renderWorkspaceUI();
+      startWsPolling();
+      toast('Workspace reconnected ✓', 'success');
+    } else {
+      toast('Permission not granted', 'error');
+    }
+  } catch(e) { toast('Reconnect failed: ' + e.message, 'error'); }
+}
+
+async function unlinkWorkspace() {
+  const p = getActiveProject();
+  if (!p) return;
+  stopWsPolling();
+  wsHandle = null; wsSnapshot = {}; wsPending = {}; wsChanges = [];
+  await idbDel('ws_' + p.id);
+  localStorage.removeItem('ws_snap_' + p.id);
+  renderWorkspaceUI();
+  toast('Workspace unlinked (your local files are untouched)', 'info');
+}
+
+/* Called from openProject() */
+async function initWorkspaceForProject(projectId) {
+  stopWsPolling();
+  wsHandle = null; wsSnapshot = {}; wsPending = {}; wsChanges = [];
+  if (!wsSupported()) { renderWorkspaceUI(); return; }
+  try {
+    const handle = await idbGet('ws_' + projectId);
+    if (handle) {
+      wsHandle = handle;
+      try { wsSnapshot = JSON.parse(localStorage.getItem('ws_snap_' + projectId) || '{}'); } catch(_) {}
+      const perm = await handle.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') startWsPolling();
+      // else: renderWorkspaceUI shows the Reconnect button (requestPermission needs a user gesture)
+    }
+  } catch(_) {}
+  renderWorkspaceUI();
+}
+
+/* ---------- polling & change detection ---------- */
+function startWsPolling() {
+  stopWsPolling();
+  wsTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') wsPoll();
+  }, WS_POLL_MS);
+  wsPoll();
+}
+function stopWsPolling() {
+  if (wsTimer) { clearInterval(wsTimer); wsTimer = null; }
+}
+
+function wsIgnored(name) { return WS_IGNORE.some(rx => rx.test(name)); }
+
+async function wsScanRaw() {
+  // Flat scan of the linked folder (top level — keeps it predictable)
+  const out = {};
+  if (!wsHandle) return out;
+  for await (const [name, entry] of wsHandle.entries()) {
+    if (entry.kind !== 'file' || wsIgnored(name)) continue;
+    try {
+      const f = await entry.getFile();
+      out[name] = { size: f.size, mtime: f.lastModified };
+    } catch(_) {}
+  }
+  return out;
+}
+
+async function wsPoll() {
+  const p = getActiveProject();
+  if (!p || !wsHandle) return;
+  let current;
+  try {
+    const perm = await wsHandle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { stopWsPolling(); renderWorkspaceUI(); return; }
+    current = await wsScanRaw();
+  } catch(e) { return; }
+
+  const newlyStable = [];
+
+  for (const [name, info] of Object.entries(current)) {
+    const snap = wsSnapshot[name];
+    const unchanged = snap && snap.size === info.size && snap.mtime === info.mtime;
+    if (unchanged) { delete wsPending[name]; continue; }
+
+    // Changed vs snapshot — require stability across two polls
+    // (ZBrush writes multi-GB files slowly; don't commit a half-written sculpt)
+    const pend = wsPending[name];
+    if (pend && pend.size === info.size && pend.mtime === info.mtime) {
+      pend.seen++;
+      if (pend.seen >= 2 && !wsChanges.find(c => c.name === name)) {
+        newlyStable.push(name);
+        wsChanges.push({ name, size: info.size, mtime: info.mtime });
+      }
+    } else {
+      wsPending[name] = { size: info.size, mtime: info.mtime, seen: 1 };
+    }
+  }
+
+  // Files deleted locally: just update snapshot silently (cloud copies stay safe)
+  for (const name of Object.keys(wsSnapshot)) {
+    if (!(name in current)) { delete wsSnapshot[name]; delete wsPending[name]; }
+  }
+
+  if (newlyStable.length) {
+    renderWsChanges();
+    toast(`${newlyStable.length} file${newlyStable.length>1?'s':''} changed in workspace`, 'info');
+  } else {
+    // keep list fresh (sizes may have shifted from stable back to pending)
+    renderWsChanges();
+  }
+}
+
+/* ---------- version-name collapsing ----------
+   dragon_v003.ztl, dragon003.blend, dragon_final2.spp
+   all map to base "dragon" so they become versions of ONE entity */
+function wsBaseName(fileName) {
+  const dot = fileName.lastIndexOf('.');
+  const ext = dot > 0 ? fileName.slice(dot) : '';
+  let stem = dot > 0 ? fileName.slice(0, dot) : fileName;
+  stem = stem
+    .replace(/[ _.-]*(?:v|ver|version)[ _.-]*\d{1,4}$/i, '')  // _v003, ver2
+    .replace(/[ _.-]+\d{1,4}$/i, '')                          // _003, -12
+    .replace(/[ _.-]*final[ _.-]*\d*$/i, '')                  // _final, final2
+    .replace(/[ _.-]*copy[ _.-]*\d*$/i, '')                   // copy, _copy2
+    .trim();
+  // Bare trailing digits (dragon003 — classic incremental save), but only
+  // when 2+ digits and a meaningful stem remains, so "T34" or "scene2" survive
+  const bare = stem.match(/^(.*?)(\d{2,4})$/);
+  if (bare && bare[1].length >= 3 && !/\d$/.test(bare[1])) stem = bare[1].replace(/[ _.-]+$/, '');
+  return { stem: stem || fileName, ext: ext.toLowerCase() };
+}
+
+function wsMatchProjectFile(project, changedName) {
+  const c = wsBaseName(changedName);
+  return project.files.find(f => {
+    const b = wsBaseName(f.name);
+    return b.stem.toLowerCase() === c.stem.toLowerCase() && b.ext === c.ext;
+  });
+}
+
+/* ---------- commit ---------- */
+async function wsCommit(name) {
+  const p = getActiveProject();
+  if (!p || !wsHandle) return;
+  const change = wsChanges.find(c => c.name === name);
+  if (!change) return;
+
+  if (!hasAnyStorage()) {
+    toast('Set up file storage in ⚙ Settings first (Cloudflare R2 recommended)', 'error');
+    return;
+  }
+
+  let file;
+  try {
+    const entry = await wsHandle.getFileHandle(name);
+    file = await entry.getFile();
+  } catch(e) {
+    toast('Could not read ' + name + ' — was it moved?', 'error');
+    wsDismiss(name);
+    return;
+  }
+
+  const note = prompt(`Commit "${name}" (${fmtSize(file.size)})\n\nVersion note (optional):`) ?? null;
+  if (note === null) return; // cancelled
+
+  const existing = wsMatchProjectFile(p, name);
+  const progress = document.getElementById('upload-progress');
+  const fill = document.getElementById('up-fill');
+  const status = document.getElementById('up-status');
+  progress.classList.add('show');
+
+  try {
+    const { url, size } = await uploadSingleFile(file, p.id, (done, total) => {
+      fill.style.width = Math.round(done / total * 100) + '%';
+      status.textContent = `${name} — ${fmtSize(done)} / ${fmtSize(total)}`;
+    });
+
+    if (existing) {
+      existing.versions.forEach(v => v.current = false);
+      existing.versions.push({
+        id: uid(), url, size, current: true,
+        note: note || `From workspace: ${name}`,
+        uploadedAt: timestamp()
+      });
+      toast(`Committed as v${existing.versions.length} of ${existing.name} ✓`, 'success');
+    } else {
+      addFileToProject(p, file, url, size);
+      toast(`${name} added to project ✓`, 'success');
+    }
+
+    // Accept into snapshot so it stops showing as changed
+    wsSnapshot[name] = { size: change.size, mtime: change.mtime };
+    localStorage.setItem('ws_snap_' + p.id, JSON.stringify(wsSnapshot));
+    wsDismiss(name);
+    renderFiles(); updateProjectStats(); saveToStorage();
+  } catch(e) {
+    toast('Commit failed: ' + e.message, 'error');
+  } finally {
+    setTimeout(() => { progress.classList.remove('show'); fill.style.width = '0%'; }, 1200);
+  }
+}
+
+function wsDismiss(name) {
+  const p = getActiveProject();
+  const change = wsChanges.find(c => c.name === name);
+  if (change && p) {
+    // Treat current state as accepted baseline
+    wsSnapshot[name] = { size: change.size, mtime: change.mtime };
+    localStorage.setItem('ws_snap_' + p.id, JSON.stringify(wsSnapshot));
+  }
+  wsChanges = wsChanges.filter(c => c.name !== name);
+  delete wsPending[name];
+  renderWsChanges();
+}
+
+/* ---------- download to workspace ---------- */
+async function downloadToWorkspace(fileId) {
+  const p = getActiveProject();
+  const f = p?.files.find(x => x.id === fileId);
+  if (!f) return;
+  if (!wsHandle) { toast('Link a workspace folder first (Files tab)', 'error'); return; }
+
+  const current = f.versions.find(v => v.current) || f.versions[f.versions.length - 1];
+  if (!current?.url) { toast('No version available', 'error'); return; }
+
+  const progress = document.getElementById('upload-progress');
+  const fill = document.getElementById('up-fill');
+  const status = document.getElementById('up-status');
+  progress.classList.add('show');
+  document.querySelector('#upload-progress .up-title').textContent = '⬇ Downloading to workspace…';
+
+  try {
+    status.textContent = f.name;
+    const res = await fetch(current.url);
+    if (!res.ok) throw new Error('Download failed: ' + res.status);
+
+    const entry = await wsHandle.getFileHandle(f.name, { create: true });
+    const writable = await entry.createWritable();
+
+    const total = current.size || Number(res.headers.get('Content-Length')) || 0;
+    let done = 0;
+    const reader = res.body.getReader();
+    while (true) {
+      const { value, done: finished } = await reader.read();
+      if (finished) break;
+      await writable.write(value);
+      done += value.length;
+      if (total) {
+        fill.style.width = Math.round(done / total * 100) + '%';
+        status.textContent = `${f.name} — ${fmtSize(done)} / ${fmtSize(total)}`;
+      }
+    }
+    await writable.close();
+
+    // Register in snapshot so the fresh download isn't flagged as a "change"
+    const written = await (await wsHandle.getFileHandle(f.name)).getFile();
+    wsSnapshot[f.name] = { size: written.size, mtime: written.lastModified };
+    localStorage.setItem('ws_snap_' + p.id, JSON.stringify(wsSnapshot));
+
+    toast(`${f.name} is in your workspace folder ✓`, 'success');
+  } catch(e) {
+    toast('Download failed: ' + e.message, 'error');
+  } finally {
+    setTimeout(() => {
+      progress.classList.remove('show'); fill.style.width = '0%';
+      document.querySelector('#upload-progress .up-title').textContent = '⬆ Uploading files...';
+    }, 1200);
+  }
+}
+
+/* ---------- UI ---------- */
+function renderWorkspaceUI() {
+  const bar = document.getElementById('workspace-bar');
+  if (!bar) return;
+  const icon = document.getElementById('ws-icon');
+  const label = document.getElementById('ws-label');
+  const linkBtn = document.getElementById('ws-link-btn');
+  const reconnBtn = document.getElementById('ws-reconnect-btn');
+  const unlinkBtn = document.getElementById('ws-unlink-btn');
+
+  if (!wsSupported()) {
+    bar.classList.remove('linked');
+    icon.textContent = 'ℹ️';
+    label.innerHTML = `<strong>Workspace folders</strong> need Chrome or Edge on desktop. In this browser you can still upload &amp; download files normally.`;
+    linkBtn.style.display = 'none';
+    reconnBtn.style.display = 'none';
+    unlinkBtn.style.display = 'none';
+    return;
+  }
+
+  if (!wsHandle) {
+    bar.classList.remove('linked');
+    icon.textContent = '📂';
+    label.innerHTML = `<strong>Workspace folder</strong> — link a folder on your PC. Save from Blender / ZBrush / Painter into it and Stratum will notice and offer one-click version commits.`;
+    linkBtn.style.display = '';
+    reconnBtn.style.display = 'none';
+    unlinkBtn.style.display = 'none';
+    return;
+  }
+
+  // Have a handle — check permission state async
+  wsHandle.queryPermission({ mode: 'readwrite' }).then(perm => {
+    if (perm === 'granted') {
+      bar.classList.add('linked');
+      icon.textContent = '✅';
+      label.innerHTML = `Watching <span class="ws-path">${escHtml(wsHandle.name)}/</span> — save your work there and it shows up below. Changes are checked every few seconds.`;
+      linkBtn.style.display = 'none';
+      reconnBtn.style.display = 'none';
+      unlinkBtn.style.display = '';
+    } else {
+      bar.classList.remove('linked');
+      icon.textContent = '🔒';
+      label.innerHTML = `Workspace <span class="ws-path">${escHtml(wsHandle.name)}/</span> is linked but needs permission again after the page reloaded.`;
+      linkBtn.style.display = 'none';
+      reconnBtn.style.display = '';
+      unlinkBtn.style.display = '';
+    }
+  });
+  renderWsChanges();
+}
+
+function renderWsChanges() {
+  const panel = document.getElementById('ws-changes');
+  const list = document.getElementById('ws-changes-list');
+  if (!panel || !list) return;
+  const p = getActiveProject();
+
+  if (!wsChanges.length || !p) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  list.innerHTML = wsChanges.map(c => {
+    const existing = wsMatchProjectFile(p, c.name);
+    return `
+    <div class="ws-change-row">
+      <span class="ws-change-name">${escHtml(c.name)}</span>
+      <span class="ws-change-badge ${existing ? 'new-version' : 'new-file'}">
+        ${existing ? `→ v${existing.versions.length + 1} of ${escHtml(existing.name)}` : 'new file'}
+      </span>
+      <span class="ws-change-meta">${fmtSize(c.size)}</span>
+      <button class="btn btn-amber btn-sm" onclick="wsCommit('${escJs(c.name)}')">⬆ Commit</button>
+      <button class="btn btn-ghost btn-sm" onclick="wsDismiss('${escJs(c.name)}')">Ignore</button>
+    </div>`;
+  }).join('');
+}
+
+function escJs(str) {
+  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+/* ============================================================
    GUIDED TOUR
    ============================================================ */
 const TOUR_STEPS = [
@@ -3022,27 +4085,36 @@ let tourActive = false;
 
 function startTour() {
   dismissWelcomeModal();
-  // Make sure demo or some project is open
   if (!state.activeProjectId && state.projects.length) {
     openProject(state.projects[0].id);
   } else if (!state.activeProjectId) {
     loadDemoProject();
-    return; // loadDemoProject calls startTour after delay
+    return;
   }
 
   tourStep = 0;
   tourActive = true;
-  document.getElementById('onboard-overlay').style.display = 'block';
-  document.getElementById('onboard-backdrop').classList.add('visible');
-  renderTourStep();
+  const overlay = document.getElementById('onboard-overlay');
+  overlay.style.display = 'block';
+  overlay.classList.add('active');
+  // Small delay so display:block is painted before we trigger opacity
+  requestAnimationFrame(() => {
+    document.getElementById('onboard-backdrop').classList.add('visible');
+    document.getElementById('onboard-highlight').style.opacity = '0';
+    renderTourStep();
+  });
 }
 
 function endTour() {
   tourActive = false;
-  document.getElementById('onboard-overlay').style.display = 'none';
+  const overlay = document.getElementById('onboard-overlay');
   document.getElementById('onboard-backdrop').classList.remove('visible');
-  document.getElementById('onboard-highlight').style.display = 'none';
   document.getElementById('onboard-bubble').classList.remove('visible');
+  document.getElementById('onboard-bubble').style.opacity = '0';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    overlay.classList.remove('active');
+  }, 350);
   localStorage.setItem('stratum_onboarded', '1');
   toast('Tour complete! Click ? anytime to replay.', 'info');
 }
@@ -3058,89 +4130,99 @@ function tourPrev() {
   renderTourStep();
 }
 
-function renderTourStep() {
-  const step = TOUR_STEPS[tourStep];
-  if (!step) { endTour(); return; }
-
-  // Run any action (e.g. switch tab)
-  if (step.action) step.action();
-
-  // Update text
-  document.getElementById('onboard-step-label').textContent = `Step ${tourStep + 1} of ${TOUR_STEPS.length}`;
-  document.getElementById('onboard-title').textContent = step.title;
-  document.getElementById('onboard-body').innerHTML = step.body;
-
-  // Dots
-  const dots = document.getElementById('onboard-dots');
-  dots.innerHTML = TOUR_STEPS.map((_, i) =>
-    `<div class="onboard-dot ${i === tourStep ? 'active' : ''}"></div>`
-  ).join('');
-
-  // Prev/Next buttons
-  document.getElementById('onboard-prev').style.display = tourStep > 0 ? 'inline-flex' : 'none';
-  document.getElementById('onboard-next').textContent = tourStep === TOUR_STEPS.length - 1 ? 'Finish ✓' : 'Next →';
-
-  // Position highlight + bubble
+function positionBubbleOnTarget(step) {
   const bubble = document.getElementById('onboard-bubble');
   const highlight = document.getElementById('onboard-highlight');
 
-  bubble.className = `onboard-bubble ${step.arrow}`;
-
   if (!step.target) {
-    // Centered
+    highlight.style.opacity = '0';
     highlight.style.display = 'none';
-    bubble.style.top = '50%';
-    bubble.style.left = '50%';
-    bubble.style.transform = 'translate(-50%, -50%)';
-    setTimeout(() => bubble.classList.add('visible'), 20);
+    Object.assign(bubble.style, { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' });
+    requestAnimationFrame(() => requestAnimationFrame(() => bubble.classList.add('visible')));
     return;
   }
 
   const targetEl = document.querySelector(step.target);
   if (!targetEl) {
+    highlight.style.opacity = '0';
     highlight.style.display = 'none';
-    bubble.style.top = '50%';
-    bubble.style.left = '50%';
-    bubble.style.transform = 'translate(-50%, -50%)';
-    setTimeout(() => bubble.classList.add('visible'), 20);
+    Object.assign(bubble.style, { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' });
+    requestAnimationFrame(() => requestAnimationFrame(() => bubble.classList.add('visible')));
     return;
   }
 
-  const rect = targetEl.getBoundingClientRect();
-  const pad = 8;
+  // Scroll into view, then wait for layout to settle before measuring
+  targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  // Position highlight
-  highlight.style.display = 'block';
-  highlight.style.left = (rect.left - pad) + 'px';
-  highlight.style.top = (rect.top - pad) + 'px';
-  highlight.style.width = (rect.width + pad * 2) + 'px';
-  highlight.style.height = (rect.height + pad * 2) + 'px';
+  setTimeout(() => {
+    const rect = targetEl.getBoundingClientRect();
+    const pad = 10;
 
-  // Position bubble
-  bubble.style.transform = '';
-  const bw = 340, bh = 260;
-  const vw = window.innerWidth, vh = window.innerHeight;
-  const gap = 20;
+    Object.assign(highlight.style, {
+      display: 'block',
+      opacity: '1',
+      left:   (rect.left   - pad) + 'px',
+      top:    (rect.top    - pad) + 'px',
+      width:  (rect.width  + pad * 2) + 'px',
+      height: (rect.height + pad * 2) + 'px'
+    });
 
-  if (step.position === 'right') {
-    bubble.style.left = Math.min(rect.right + gap, vw - bw - 16) + 'px';
-    bubble.style.top = Math.max(rect.top, 16) + 'px';
-  } else if (step.position === 'below') {
-    bubble.style.left = Math.max(16, Math.min(rect.left, vw - bw - 16)) + 'px';
-    bubble.style.top = Math.min(rect.bottom + gap, vh - bh - 16) + 'px';
-  } else if (step.position === 'above') {
-    bubble.style.left = Math.max(16, Math.min(rect.left, vw - bw - 16)) + 'px';
-    bubble.style.top = Math.max(rect.top - bh - gap, 16) + 'px';
-  } else {
-    bubble.style.left = '50%';
-    bubble.style.top = '50%';
-    bubble.style.transform = 'translate(-50%, -50%)';
-  }
+    const bw = 360, bh = 310;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const gap = 20;
+    let left, top;
 
-  setTimeout(() => bubble.classList.add('visible'), 20);
+    if (step.position === 'right') {
+      left = Math.min(rect.right + gap, vw - bw - 16);
+      top  = Math.max(Math.min(rect.top, vh - bh - 16), 16);
+    } else if (step.position === 'below') {
+      left = Math.max(16, Math.min(rect.left, vw - bw - 16));
+      top  = Math.min(rect.bottom + gap, vh - bh - 16);
+    } else if (step.position === 'above') {
+      left = Math.max(16, Math.min(rect.left, vw - bw - 16));
+      top  = Math.max(rect.top - bh - gap, 16);
+    } else {
+      left = (vw - bw) / 2;
+      top  = (vh - bh) / 2;
+    }
 
-  // Scroll target into view
-  targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    Object.assign(bubble.style, { left: left + 'px', top: top + 'px', transform: '' });
+    requestAnimationFrame(() => requestAnimationFrame(() => bubble.classList.add('visible')));
+  }, step.action ? 260 : 120); // extra wait after tab switch so new tab DOM is painted
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourStep];
+  if (!step) { endTour(); return; }
+
+  const bubble = document.getElementById('onboard-bubble');
+  const highlight = document.getElementById('onboard-highlight');
+
+  // 1. Fade bubble out
+  bubble.classList.remove('visible');
+  highlight.style.opacity = '0';
+
+  // 2. Fire tab/action switch immediately (before the delay)
+  if (step.action) step.action();
+
+  // 3. After fade-out settles, update content and reposition
+  setTimeout(() => {
+    document.getElementById('onboard-step-label').textContent = `Step ${tourStep + 1} of ${TOUR_STEPS.length}`;
+    document.getElementById('onboard-title').textContent = step.title;
+    document.getElementById('onboard-body').innerHTML = step.body;
+
+    document.getElementById('onboard-dots').innerHTML = TOUR_STEPS.map((_, i) =>
+      `<div class="onboard-dot ${i === tourStep ? 'active' : ''}"></div>`
+    ).join('');
+
+    document.getElementById('onboard-prev').style.display = tourStep > 0 ? 'inline-flex' : 'none';
+    document.getElementById('onboard-next').textContent =
+      tourStep === TOUR_STEPS.length - 1 ? 'Finish ✓' : 'Next →';
+
+    bubble.className = `onboard-bubble ${step.arrow || 'arrow-none'}`;
+
+    positionBubbleOnTarget(step);
+  }, 180);
 }
 
 /* ============================================================
